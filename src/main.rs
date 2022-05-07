@@ -57,12 +57,13 @@ pub fn terminal_size() -> Option<winsize> {
     }
 }
 
-pub fn true_color(c: &[u8]) -> String {
-    format!("\x1b[38;2;{:>03};{:>03};{:>03}m", c[0], c[1], c[2])
+pub fn true_color(c1: u8, c2: u8, c3: u8) -> String {
+    format!("\x1b[38;2;{:>03};{:>03};{:>03}m", c1, c2, c3)
 }
 
 fn main() -> Result<()> {
     // 動画の読み込み
+    // TODO: 動画が存在しない場合の処理
     let mut video = VideoCapture::from_file(format!("movies/{}", MOVIE_NAME).as_str(), CAP_FFMPEG)?;
     let info = VideoInfo::new(&mut video);
     let time_per_frame =
@@ -106,13 +107,13 @@ fn main() -> Result<()> {
         )?;
 
         out.write(b"\x1b[H").unwrap();
-        out.write(b"\x1b[38;2;150;150;150m").unwrap();
+        // out.write(b"\x1b[38;2;150;150;150m").unwrap();
+        out.write(b"\x1b[40m").unwrap();
         for y in 0..image.rows() {
             for x in 0..image.cols() {
                 let px: &Vec3b = image.at_2d(y, x).unwrap();
                 out.write_fmt(format_args!(
-                    "\x1b[48;2;{};{};{}m ",
-                    px.0[2], px.0[1], px.0[0],
+                    "{}@", true_color(px.0[2], px.0[1], px.0[0])
                 ))
                 .unwrap();
             }
